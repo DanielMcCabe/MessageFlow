@@ -25,7 +25,7 @@ Create the MessageFlow nodes (the columns that messages flow between):
 
 ```
 var mFlow = new MessageFlow({container : "placeholder",
-                             nodeNames : ["Node 1", "Node 2", "Node 3"]});
+                             nodeNames : ["Node 1", "Node 2", "Node 3"] });
 ```
 
 Add a message line, from one column to another:
