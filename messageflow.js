@@ -1,10 +1,10 @@
 /* Message Flow - Version 1.0 - JavaScript library for displaying a dynamic and interactive sequence of messages.
  * 
- * Copyright (c) 2013 Daniel McCabe (http://www.messageflowjs.com)
+ * Copyright (c) 2013 Daniel McCabe
  * 
  * License: Licensed under the MIT license.
  * 
- * Built using: Raphael - v2.1.0 - JavaScript Vector Library
+ * Dependency : Raphael - v2.1.0 - JavaScript Vector Library
  *              By Dmitry Baranovskiy (http://raphaeljs.com)
  *              Licensed under the MIT license.
  * 
@@ -13,11 +13,11 @@
  * Example usage:
  *
  *   // Create the diagram and draw the nodes/columns
- *   var mFlow = new MessageFlow("container", ["Node 1", "Node 2", "Node 3", "Node 4"]);
+ *   var mFlow = new MessageFlow({container:"container", nodeNames:["Node 1", "Node 2", "Node 3", "Node 4"]});
  *   
  *   // or using a reference to the DOM element..
  *   var obj = document.getElementById("container");
- *   var mFlow = new MessageFlow(obj, ["Node 1", "Node 2", "Node 3", "Node 4"]);
+ *   var mFlow = new MessageFlow({container:obj, nodeNames:["Node 1", "Node 2", "Node 3", "Node 4"]});
  *   
  *   
  *   // Add a message line
@@ -30,8 +30,10 @@
  *						   callbackData : data});
  */ 
 
-function MessageFlow(element, nodeNameArray)
+function MessageFlow(data)
 {
+    var element = data.container;
+    var nodeNameArray = data.nodeNames;
 	var container;
 	
 	if (typeof element === "object")
