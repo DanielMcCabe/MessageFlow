@@ -39,7 +39,7 @@ mflow.addMessageLine(from          : 1,
                      callbackData  : {someData:"blah", someMoreData:"ja"});
 ```
 
-'addMessageLine(...)' parameters
+'addMessageLine(...)' parameters:
 
 from          - The node (column) that the message line starts from.
 to            - The node (column) where the message line finishes.
