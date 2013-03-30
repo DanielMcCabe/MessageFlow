@@ -31,12 +31,12 @@ var mFlow = new MessageFlow({container : "placeholder",
 Add a message line, from one column to another:
 
 ```
-mflow.addMessageLine(from          : 1,
-                     to            : 2,
-                     primaryText   : "Message one",
-                     secondaryText : "16:12:00",
-                     callback      : someFunction,
-                     callbackData  : {someData:"blah", someMoreData:"ja"});
+mflow.addMessageLine({ from          : 1,
+                       to            : 2,
+                       primaryText   : "Message one",
+                       secondaryText : "16:12:00",
+                       callback      : someFunction,
+                       callbackData  : {someData:"blah", someMoreData:"ja"} });
 ```
 
 'addMessageLine(...)' parameters:
