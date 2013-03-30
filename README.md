@@ -60,6 +60,6 @@ Copyright and licence
 
 Copyright &copy; 2013 Daniel McCabe (http://www.dannymccabe.com)
 
-Licensed under the MIT license.
+Licensed under the __MIT__ license.
 
 [raphael]: https://github.com/DmitryBaranovskiy/raphael/
