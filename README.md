@@ -28,6 +28,15 @@ var mFlow = new MessageFlow({container : "placeholder",
                              nodeNames : ["Node 1", "Node 2", "Node 3"] });
 ```
 
+Or, instead of passing in the _id_ of the placeholder div simply pass in the DOM element like so:
+
+```
+var placeHolder = document.getElementById("placeholder");
+
+var mFlow = new MessageFlow({container : placeHolder,
+                             nodeNames : ["Node 1", "Node 2", "Node 3"] });
+```
+
 Add a message line, from one column to another:
 
 ```
