@@ -9,7 +9,7 @@ MessageFlow is a small JavaScript library for displaying a dynamic and interacti
 Dependancies
 -----------------------------------------
 
-- Raphael JS
+* [Raphael JS] [raphael]
 
 Usage
 -----------------------------------------
@@ -61,3 +61,5 @@ Copyright and licence
 Copyright c 2013 Daniel McCabe (http://www.dannymccabe.com)
 
 Licensed under the MIT license.
+
+[raphael]: https://github.com/DmitryBaranovskiy/raphael/
