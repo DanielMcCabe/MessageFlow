@@ -23,17 +23,21 @@ dimentions on the dimensions of the placeholder div.
 
 Create the MessageFlow nodes (the columns that messages flow between):
 
+```
 var mFlow = new MessageFlow({container : "placeholder",
                              nodeNames : ["Node 1", "Node 2", "Node 3"]});
+```
 
 Add a message line, from one column to another:
 
+```
 mflow.addMessageLine(from          : 1,
                      to            : 2,
                      primaryText   : "Message one",
                      secondaryText : "16:12:00",
                      callback      : someFunction,
                      callbackData  : {someData:"blah", someMoreData:"ja"});
+```
 
 'addMessageLine(...)' parameters
 
