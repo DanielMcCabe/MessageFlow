@@ -58,7 +58,7 @@ Please send all feedback to contact@dannymccabe.com
 Copyright and licence
 ----------------------------------------
 
-Copyright c 2013 Daniel McCabe (http://www.dannymccabe.com)
+Copyright &copy; 2013 Daniel McCabe (http://www.dannymccabe.com)
 
 Licensed under the MIT license.
 
