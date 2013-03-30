@@ -41,12 +41,12 @@ mflow.addMessageLine({ from          : 1,
 
 'addMessageLine(...)' parameters:
 
-* from          : The node (column) that the message line starts from.
-* to            : The node (column) where the message line finishes.
-* primaryText   : The text that is displayed above the message line (for example, the name of the message).
-* secondaryText : The text that is displayed below the message line (for example, a message sent / arrival timestamp).
-* callback      : The function that is called when a user clicks on the primary message text. This function might do something like display extra details about a message.
-* callbackData  : The data that is passed into the callback function when it is called. This data parameter is an object.
+* from          - The node (column) that the message line starts from.
+* to            - The node (column) where the message line finishes.
+* primaryText   - The text that is displayed above the message line (for example, the name of the message).
+* secondaryText - The text that is displayed below the message line (for example, a message sent / arrival timestamp).
+* callback      - The function that is called when a user clicks on the primary message text. This function might do something like display extra details about a message.
+* callbackData  - The data that is passed into the callback function when it is called. This data parameter is an object.
 
 Feedback
 ----------------------------------------
