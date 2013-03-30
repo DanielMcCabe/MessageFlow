@@ -50,7 +50,7 @@ mflow.addMessageLine({ from          : 1,
 
 'addMessageLine(...)' parameters:
 
-* __from__          - The node (column) that the message line starts from.
+* __from__          - The node (column) that the message line starts from. Column numbers start at 1, not 0.
 * __to__            - The node (column) where the message line finishes.
 * __primaryText__   - The text that is displayed above the message line (for example, the name of the message).
 * __secondaryText__ - The text that is displayed below the message line (for example, a message sent / arrival timestamp).
