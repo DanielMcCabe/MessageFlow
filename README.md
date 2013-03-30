@@ -15,7 +15,7 @@ Usage
 -----------------------------------------
 
 Create a placeholder div to put the MessageFlow diagram in. You will need to set the width and height also as the MessageFlow library bases its
-dimensions on the dimensions of the placeholder div.
+initial size on the dimensions of the placeholder div.
 
 ```
 <div id="placeholder" style="width:600px;height:600px;"></div>
