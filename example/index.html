@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>MessageFlow example</title>
+
+    <script type="text/javascript" src="../raphael-min.js" > </script>
+    <script type="text/javascript" src="../messageflow-min.js" > </script>
+    <script type="text/javascript">
+
+	    window.onload=function() {
+	    	var mFlow = new MessageFlow({ container : "message-flow-container",
+                                      nodeNames : ["Node 1", "Node 2", "Node 3", "Node 4"] });
+
+    		mFlow.addMessageLine({ from          : 1,
+    		                       to            : 2,
+    		                       primaryText   : "Message one",
+    		                       secondaryText : "Arrival:  16:12:00",
+    		                       callback      : displayMessageDetails,
+    		                       callbackData  : {title: "Message one", details: "Details of message one could go here."} });
+
+    		mFlow.addMessageLine({ from          : 2,
+    		                       to            : 4,
+    		                       primaryText   : "Message two",
+    		                       secondaryText : "Arrival:  16:14:00",
+    		                       callback      : displayMessageDetails,
+    		                       callbackData  : {title: "Message two", details: "Details of message two could go here."} });
+
+    		mFlow.addMessageLine({ from          : 4,
+    		                       to            : 1,
+    		                       primaryText   : "Message three",
+    		                       secondaryText : "Arrival:  16:26:00",
+    		                       callback      : displayMessageDetails,
+    		                       callbackData  : {title: "Message three", details: "Details of message three could go here."} });
+
+    		function displayMessageDetails(data)
+    		{
+    		    var detailMarkup = "<h2>" + data.title + "</h2>";
+    		    detailMarkup += "<p>" + data.details + "</p>";
+
+    		    var detailsContainer = document.getElementById("details-container");
+    		    detailsContainer.innerHTML = detailMarkup;
+    		}
+    	};
+
+	</script>
+</head>
+<body>
+
+	<div>
+		<h2>MessageFlow example</h2>
+	</div>
+
+	<div>
+		<p>Click on any message to display it details.</p>
+
+		<h3>Simple MessageFlow diagram</h3>
+
+		<div id="message-flow-container" style="border:1px solid #000;width:600px;height:400px;position:relation;float:left;"></div>
+        <div id="details-container" style="margin:20px;width:300px;position:relation;float:left;"></div>
+
+	</div>
+
+	<div style="clear:both;padding-top:40px;">
+		Copyright &copy; 2013 Daniel McCabe
+	</div>
+
+</body>
+</html>
