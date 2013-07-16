@@ -209,8 +209,11 @@ MessageFlow.prototype._getNodeLinePath=function(index)
     return this.nodes[index].linePath.attr("path");
 };
 
-// Create a message object that will be stored in class owned messages array.
-// Used to persist the message elements that are referenced by mouse events.
+/*
+    Message class:
+        state:     message elements that are referenced by mouse events
+        behaviour: bind mouse events
+*/
 function Message(_line, _arrow, _primaryText, _secondaryText, messages, _callback, _callbackData, messageFlow)
 {
     // class variables
@@ -285,6 +288,7 @@ function _isValid(from, to, nodeCount)
 /*
     Node class:
         state:     properties of a node's line
+        behaviour: node construction functions
 */
 function Node(text, canvas, nodeTitleBoxGap, nodeCount, nodeIndex)
 {
