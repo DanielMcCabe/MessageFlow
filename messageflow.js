@@ -149,8 +149,8 @@ MessageFlow.prototype.addMessageLine=function(data)
     }
 
     // Prepare to draw the message line
-    var fromNodeColumnXOffset = this._getNodeLinePath(data.from-1)[0][1];
-    var toNodeColumnXOffset = this._getNodeLinePath(data.to-1)[0][1];
+    var fromNodeColumnXOffset = this._getNodeLinePath(data.from - 1)[0][1];
+    var toNodeColumnXOffset = this._getNodeLinePath(data.to - 1)[0][1];
 
     // Draw the message line
     var nextMessageLineYOffset = this._lineStartY + (this._mLineGap * (this.messages.length + 1));
@@ -254,10 +254,14 @@ Message.prototype._bindMouseEvents=function(messageObj, messages)
             messageObj.line.attr({stroke:"blue"});
             messageObj.arrow.attr({stroke:"blue"});
 
-            if ((typeof messageObj.callback !== "undefined") && (typeof messageObj.callbackData !== "undefined") && (messageObj.callbackData !== null))
+            if (typeof messageObj.callback !== "undefined")
             {
                 var f = messageObj.callback;
-                f(messageObj.callbackData);
+                if ((typeof messageObj.callbackData === "undefined") || (messageObj.callbackData === null)) {
+                    f();
+                } else {
+                    f(messageObj.callbackData);
+                }
             }
 
             messageObj.clicked = true;

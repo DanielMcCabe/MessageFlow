@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>MessageFlow example</title>
+
+    <script type="text/javascript" src="../raphael-min.js" > </script>
+    <script type="text/javascript" src="../messageflow-min.js" > </script>
+    <script type="text/javascript">
+
+        window.onload=function() {
+
+            function displayMessageDetails(data)
+            {
+                return function() {
+                    var value = "<h2>" + data.someContent + "</h2>";
+
+                    var detailsContainer = document.getElementById("details-container");
+                    detailsContainer.innerHTML = value;
+                };
+            }
+
+            var mFlow = new MessageFlow({ container : "message-flow-container",
+                                          nodeNames : ["Node 1", "Node 2", "Node 3", "Node 4"] });
+
+            // Add button onclick handler
+            var s = document.getElementById("add").onclick = function() {
+                // get user input
+                var msgContent = document.getElementById("data").value;
+                var fromContent = document.getElementById("from").value;
+                var toContent = document.getElementById("to").value;
+
+                // create closure and associate the user input with it
+                var callbackData = {someContent: msgContent};
+                var myCallback = displayMessageDetails(callbackData);
+
+                // add a message line passing in the closure as a callback function
+                mFlow.addMessageLine({ from          : fromContent,
+                                       to            : toContent,
+                                       primaryText   : "Message",
+                                       secondaryText : "Received",
+                                       callback      : myCallback });
+            };
+
+    	};
+
+	</script>
+</head>
+<body>
+
+	<div>
+		<h2>MessageFlow example 2</h2>
+	</div>
+
+	<div>
+		<p>Click on any message to display it details.</p>
+
+		<h3>Simple MessageFlow diagram</h3>
+        <h4>Add message line:</h4>
+        <p><span style="font-style:italic;">eg, from: <strong>1</strong>, to: <strong>4</strong>, data: <strong>Hi there!</strong></span><br>
+        from: <input type="text" id="from"></input> to: <input type="text" id="to"></input> data: <input type="text" id="data"></input> <button id="add">add</button></p>
+
+		<div id="message-flow-container" style="border:1px solid #000;width:600px;height:400px;position:relation;float:left;"></div>
+        <div id="details-container" style="margin:20px;width:300px;position:relation;float:left;"></div>
+
+	</div>
+
+	<div style="clear:both;padding-top:40px;">
+		Copyright &copy; 2013 Daniel McCabe
+	</div>
+
+</body>
+</html>
