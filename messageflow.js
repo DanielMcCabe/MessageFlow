@@ -1,4 +1,4 @@
-/* Message Flow - Version 1.0 - JavaScript library for displaying a dynamic and interactive sequence of messages.
+/* Message Flow - Version 1.1 - JavaScript library for displaying a dynamic and interactive sequence of messages.
  * 
  * Copyright (c) 2013 Daniel McCabe
  * License: Licensed under the MIT license.
@@ -19,13 +19,11 @@
  *   var mFlow = new MessageFlow({container:obj, nodeNames:["Node 1", "Node 2", "Node 3", "Node 4"]});
  *   
  *   // Add a message line
- *   var data = {...};
  *   mFlow.addMessageLine({from : 1,
  *                           to : 2,
  *                  primaryText : "Message one",
  *                secondaryText : "16:12:00",
- *                     callback : someFunction,
- *                 callbackData : data});
+ *                     callback : someFunction });
  */ 
 
 
@@ -34,310 +32,446 @@
         state:     the SVG canvas, the array of created nodes, and the array of generated messages
         behaviour: creation of canvas and nodes
 */
-function MessageFlow(data)
-{
-    // Class instance variables
-    this.canvas = this._getSvgCanvas(data);
-    this.nodes = [];
-    this.messages = [];
-    this.nodeTitleBoxGap = this._calculateGapBetweenNodeTitleBoxes(data);
+(function(glob) {
 
-    if ((this.canvas !== null) && (data.nodeNames.length > 0))
-    {
-        this.nodes = this._createAllNodes(data);
-    }
-}
-
-MessageFlow.prototype._minCanvasWidth = 120;
-MessageFlow.prototype._margin = 20;
-MessageFlow.prototype._nodeRectWidth = 80;
-MessageFlow.prototype._mLineSpacing = 60;
-MessageFlow.prototype._mLineGap = 60;
-MessageFlow.prototype._lineStartY = 68;
-
-MessageFlow.prototype._getSvgCanvas=function(data)
-{
-    var element = data.container;
-    var container;
-
-    if (typeof element === "object")
-    {
-        container = element;
-    }
-    else if (typeof element === "string")
-    {
-        container = document.getElementById(element);
-    }
-    else
-    {
-        return null;
-    }
-
-    // make sure the container is big enough for all the nodes defined
-    var containerWidth = parseInt(container.style.width, 10);
-    var widthOfAllRectangles = data.nodeNames.length * this._nodeRectWidth;
-    var widthOfAllGaps = ((data.nodeNames.length - 1) * this._margin) + (this._margin * 2);
-    var requiredWidth = widthOfAllRectangles + widthOfAllGaps;
-
-    if (containerWidth < requiredWidth)
-    {
-        return null;
-    }
-
-    container.innerHTML = ""; // make sure container is empty
-
-    return Raphael(container, parseInt(container.style.width, 10), parseInt(container.style.height, 10));
-};
-
-MessageFlow.prototype._calculateGapBetweenNodeTitleBoxes=function(data)
-{
-    // find the total horizontal empty space so it can be divided evenly
-    var totalHorizontalEmptySpace = this.canvas.width - (this._nodeRectWidth * data.nodeNames.length);
-
-    return (totalHorizontalEmptySpace / (data.nodeNames.length + 1));
-};
-
-MessageFlow.prototype._createAllNodes=function(data)
-{
-    var createdNodes = [];
-    var nodeCount = data.nodeNames.length;
-
-    // Create all the nodes
-    for (var i=1;i<=nodeCount; i++)
-    {
-        var newNode = new Node(data.nodeNames[i-1], this.canvas, this.nodeTitleBoxGap, nodeCount, i);
-        createdNodes.push(newNode);
-    }
-
-    return createdNodes;
-};
-
-MessageFlow.prototype.addMessageLine=function(data)
-{
-    if ((typeof this.nodes === "undefined") || !_isValid(data.from, data.to, this.nodes.length))
-    {
-        // Message parameters supplied by user are invalid.
-        return null;
-    }
-
-    // Extend container and canvas to fit new message line, if necessary
-    var nodeLinePath = this._getNodeLinePath(0);
-    var lineHeight = nodeLinePath[1][1] - nodeLinePath[0][2]; // absolute bottom Y - absolute top Y
-    var remainingColumnHeight = lineHeight - (this.messages.length * this._mLineSpacing);
-    if (remainingColumnHeight < (this._mLineGap * 2))
-    {
-        // Increase paper and container height
-        var heightIncreaseRequired = (this._mLineGap * 2) - remainingColumnHeight;
-        this.canvas.setSize(this.canvas.width, this.canvas.height + heightIncreaseRequired);
+	// Constants
+	var NODE_RECT_HEIGHT = 48;
+	var NODE_RECT_WIDTH = 80;
+	var HALF_NODE_RECT_WIDTH = 40;
+	var MARGIN = 20;
+	var NODE_LINE_START_Y = 68;
+	var NODE_TEXT_START_Y = MARGIN + (NODE_RECT_HEIGHT / 2);
+	var MESSAGE_LINE_GAP = 60;
+	var SPACE_REQUIRED_FOR_NEW_MESSAGE_LINE = MESSAGE_LINE_GAP * 2;
 	
-        if (/msie/.test(navigator.userAgent.toLowerCase()))
+    var LINE_STYLES = { "expected" :   { "defaultLine" : { lineStyle : "stroke-dasharray",
+                                                           lineColor : "black",
+                                                           primaryTextColor : "black",
+                                                           secondaryTextColor : "#666" },
+
+                                         "hover" :  { lineStyle : "stroke-dasharray",
+                                                      lineColor : "blue",
+                                                      primaryTextColor : "blue",
+                                                      secondaryTextColor : "blue" },
+
+                                         "active" : { lineStyle : "stroke-dasharray",
+                                                      lineColor : "blue",
+                                                      primaryTextColor : "blue",
+                                                      secondaryTextColor : "blue" }
+                                       },
+
+                        "received" :   { "defaultLine" : { lineStyle : "stroke",
+                                                           lineColor : "#008B00",
+                                                           primaryTextColor : "#008B00",
+                                                           secondaryTextColor : "#008B00" },
+
+                                         "hover" :  { lineStyle : "stroke",
+                                                      lineColor : "#22AD22",
+                                                      primaryTextColor : "#22AD22",
+                                                      secondaryTextColor : "#22AD22" },
+
+                                         "active" : { lineStyle : "stroke",
+                                                      lineColor : "#33BE33",
+                                                      primaryTextColor : "#33BE33",
+                                                      secondaryTextColor : "#33BE33" }
+                                       },
+
+                        "unexpected" : { "defaultLine" : { lineStyle : "stroke",
+                                                           lineColor : "#D2691E",
+                                                           primaryTextColor : "#D2691E",
+                                                           secondaryTextColor : "#D2691E" },
+
+                                         "hover" :  { lineStyle : "stroke",
+                                                      lineColor : "#EE7621",
+                                                      primaryTextColor : "#EE7621",
+                                                      secondaryTextColor : "#EE7621" },
+
+                                         "active" : { lineStyle : "stroke",
+                                                      lineColor : "#EE7621",
+                                                      primaryTextColor : "#EE7621",
+                                                      secondaryTextColor : "#EE7621" }
+                                       } 
+    };
+
+	// private array of objects, each containing the state of a complete message flow diagram
+	var messageFlowControllers = [];
+	
+	function MessageFlowController() {
+        this.messageLines = [];
+        this.activeMessageLine;
+        this.nodes = [];
+        this.container;
+        this.canvas;
+        this.messageSpaceRemaining;
+    }
+	
+	MessageFlowController.prototype.checkArgumentsAreValid = function(args) {
+    	var i = 0;
+		
+		if (!args) {
+    		throw {
+    			name : "Invalid argument exception",
+    			message : "No MessageFlow construction parameters specified."
+    		};
+    	}
+    	
+    	if (!args.container) {
+    		throw {
+    			name : "Invalid argument exception",
+    			message : "No container specified in MessageFlow construction parameters."
+    		};
+    	}
+    	
+    	if (typeof args.container !== 'string' && typeof args.container !== 'object') {
+    		throw {
+    			name : "Invalid argument exception",
+    			message : "Invalid container type specified in MessageFlow construction parameters. Valid types: String or Object."
+    		};
+    	}
+    	
+    	if (!args.nodeNames || args.nodeNames.length == 0) {
+    		throw {
+    			name : "Invalid argument exception",
+    			message : "No nodes specified in MessageFlow construction parameters."
+    		};
+    	}
+    	
+    	for (i; i < args.nodeNames.length; i++) {
+    		if (typeof args.nodeNames[i] !== 'string') {
+    			throw {
+        			name : "Invalid argument exception",
+        			message : "Node specified in MessageFlow construction parameters is not a string. nodeName index:" + i
+        		};
+    		}
+    	}
+    };
+
+    MessageFlowController.prototype.constructDiagram = function(args) {
+    	this.checkArgumentsAreValid(args);
+    	this.getSvgCanvas(args.container, args.nodeNames);
+    	
+    	this.messageSpaceRemaining = parseInt(this.container.style.height, 10) - NODE_LINE_START_Y - MARGIN;
+    	
+    	this.constructNodes(args.nodeNames);
+    	
+    	return this;
+    };
+    
+    MessageFlowController.prototype.getSvgCanvas = function(domContainer, nodeNames)
+    {
+    	var containerWidth, widthOfAllRectangles, widthOfAllGaps, requiredWidth;
+        
+        if (typeof domContainer === "object")
         {
-            this.canvas.canvas.parentNode.style.height = (parseInt(this.canvas.canvas.parentNode.style.height, 10) + heightIncreaseRequired) + "px";			
+        	this.container = domContainer;
+        }
+        else if (typeof domContainer === "string")
+        {
+        	this.container = document.getElementById(domContainer);
+        }
+
+        // make sure the container is big enough for all the nodes defined
+        containerWidth = parseInt(this.container.style.width, 10);
+        widthOfAllRectangles = nodeNames.length * NODE_RECT_WIDTH;
+        widthOfAllGaps = ((nodeNames.length - 1) * MARGIN) + (MARGIN * 2);
+        requiredWidth = widthOfAllRectangles + widthOfAllGaps;
+
+        if (containerWidth < requiredWidth)
+        {
+        	throw {
+    			name : "Display exception",
+    			message : "DOM Container not wide enough to display all specified nodes"
+    		};
+        }
+
+        this.container.innerHTML = ""; // make sure container is empty
+
+        this.canvas = Raphael(this.container, containerWidth, parseInt(this.container.style.height, 10));
+    };
+    
+    MessageFlowController.prototype.constructNodes = function(nodeNames) {
+    	var i;
+    	var gap = this.getBoxGap(nodeNames.length);
+    	var nextOffset = gap; 
+    	
+    	for (i=0; i<nodeNames.length; i++)
+        {
+            this.nodes.push(new Node().construct(this.canvas, nodeNames[i], nextOffset));
+            nextOffset += gap + NODE_RECT_WIDTH;
+        }
+    };
+    
+    MessageFlowController.prototype.getBoxGap = function(nodeCount) {
+    	// find the total horizontal empty space so it can be divided evenly
+        var totalHorizontalEmptySpace = this.canvas.width - (NODE_RECT_WIDTH * nodeCount);
+        return (totalHorizontalEmptySpace / (nodeCount + 1));
+    };
+    
+    MessageFlowController.prototype.stretchCanvasToFitNewMessageLine = function() {
+    	
+    	var heightIncreaseRequired, i;
+    	
+        if (this.messageSpaceRemaining < SPACE_REQUIRED_FOR_NEW_MESSAGE_LINE)
+        {
+            // Increase paper and container height
+            heightIncreaseRequired = SPACE_REQUIRED_FOR_NEW_MESSAGE_LINE - this.messageSpaceRemaining;
+            this.canvas.setSize(this.canvas.width, this.canvas.height + heightIncreaseRequired);
+            this.container.style.height = (parseInt(this.container.style.height, 10) + heightIncreaseRequired) + "px";			
+    		
+            // Extend all the node columns downward
+            for (i=0; i<this.nodes.length; i++)
+            {
+                var p = this.nodes[i].linePath;
+                p.attr({path:"M " + p.attr("path")[0][1] + "," + p.attr("path")[0][2] + " V " + (p.attr("path")[1][1] + heightIncreaseRequired)});
+            }
+            
+            this.messageSpaceRemaining += heightIncreaseRequired - MESSAGE_LINE_GAP;
+        } else {
+        	this.messageSpaceRemaining -= MESSAGE_LINE_GAP;
+        }
+    };
+    
+    function Node() {
+    	this.lineOffsetX;
+    	this.linePath;
+    	this.style = {
+    		lineColor : "#aaa",
+    		boxBorderColor : "#000",
+    		fontSize : "14",
+    		textColor : "#000"
+    	};
+    }
+    
+    Node.prototype.construct = function(canvas, nodeName, offset) {
+    	var boxOffsetX = offset;
+    	this.lineOffsetX = offset + HALF_NODE_RECT_WIDTH;
+    	
+    	this.constructNodeTitleBox(canvas, boxOffsetX, nodeName);
+        this.constructNodeLine(canvas);
+        
+    	return this;
+    };
+
+    Node.prototype.constructNodeTitleBox = function(canvas, boxOffsetX, nodeName) {
+        canvas.rect(boxOffsetX, MARGIN, NODE_RECT_WIDTH, NODE_RECT_HEIGHT).attr({"stroke": this.style.boxBorderColor});
+        canvas.text(this.lineOffsetX, NODE_TEXT_START_Y, nodeName).attr({'text-anchor':'middle', fill: this.style.textColor, "font-size": this.style.fontSize});
+    };
+    
+    Node.prototype.constructNodeLine = function(canvas) {
+    	this.linePath = canvas.path("M " + this.lineOffsetX + " " + NODE_LINE_START_Y + " V " + (parseInt(canvas.height, 10) - MARGIN)).attr({"stroke": this.style.lineColor});
+    };
+    
+    //Node.prototype.setStyle = function(args) {};
+    
+    // This contructor is private, however MessageLine objects are exposed via the addMessageLine
+    function MessageLine() {
+    	this.linePath;
+    	this.arrowPath;
+    	this.primaryText;
+    	this.secondaryText;
+        this.callbackFunction;
+        this.lineType = "expected";
+    }
+    
+    MessageLine.prototype.checkArgumentsAreValid = function(args, nodeCount) {
+    	if (!args) {
+    		throw {
+    			name : "Invalid argument exception",
+    			message : "No message line parameters provided."
+    		};
+    	}
+    	
+    	if (!args.from || !args.to || !args.primaryText) {
+    		throw {
+    			name : "Invalid argument exception",
+    			message : "Insufficient message line parameters provided."
+    		};
+    	}
+    	
+    	if ((args.from < 0) || (args.from > nodeCount) || (args.to < 0) || (args.to > nodeCount) || (args.from == args.to))
+        {
+    		throw {
+    			name : "Invalid argument exception",
+    			message : "Invalid message line range (from <-> to)."
+    		};
+        }
+
+        if (args.callback && typeof args.callback !== 'function') {
+            throw {
+                name : "Invalid argument exception",
+                message : "Invalid callback object, must be a function."
+            };
+        }
+
+        if (args.lineType && (args.lineType !== "expected" && args.lineType !== "received" && args.lineType !== "unexpected")) {
+            throw {
+                name : "Invalid argument exception",
+                message : "Invalid argument lineStyle."
+            };
+        }
+    };
+    
+    MessageLine.prototype.construct = function(canvas, args, fromOffsetX, toOffsetX, yOffset) {
+		
+        var textAnchor = "start";
+        var indent = 8;
+        
+        // Prepare to create an arrow to go at the end of the message line
+        var size = 6;
+        var x = toOffsetX + size;
+        var l1 = x + " " + (yOffset - size);
+        var l2 = x + " " + (yOffset + size);
+        var l3 = toOffsetX + " " + yOffset;
+    	
+        if (args.lineType) {
+            this.lineType = args.lineType;
+        }
+
+        // Point left or right
+        if (fromOffsetX < toOffsetX)
+        {
+            x = toOffsetX - size;
+            l1 = x + " " + (yOffset - size);
+            l2 = x + " " + (yOffset + size);
         }
         else
         {
-            this.canvas.canvas.parentElement.style.height = (parseInt(this.canvas.canvas.parentElement.style.height, 10) + heightIncreaseRequired) + "px";			
+            textAnchor = "end";
+            indent = -8;
         }
-		
-        // Extend all the node columns downward
-        for (var i=0; i<this.nodes.length; i++)
+
+        // Draw arrow at the end of the message line using the path coordinates resolved above
+        this.arrowPath = canvas.path("M " + toOffsetX + " " + yOffset + " L" + l1 + " L" + l2 + " L" + l3);
+        
+        // Draw message line
+        this.linePath = canvas.path("M " + fromOffsetX + ", " + yOffset + " H " + toOffsetX);
+        
+        // Display primary text
+        this.primaryText = canvas.text(fromOffsetX + indent, yOffset-12, args.primaryText).attr({
+        	'text-anchor': textAnchor,
+        	'font-size': 13,
+        	'font-style': "bold"});
+
+        // Display secondary text, if it was supplied by the user
+        if (args.secondaryText && (typeof args.secondaryText === "string"))
         {
-            var p = this.nodes[i].linePath;
-            p.attr({path:"M " + p.attr("path")[0][1] + "," + p.attr("path")[0][2] + " V " + (p.attr("path")[1][1] + heightIncreaseRequired)});
-            lineHeight += heightIncreaseRequired;
+            this.secondaryText = canvas.text(fromOffsetX + indent, yOffset+10, args.secondaryText).attr({
+            	'text-anchor': textAnchor,
+            	'font-size': 12});
         }
-    }
+    	
+        this.setDefaultStyle();
 
-    // Prepare to draw the message line
-    var fromNodeColumnXOffset = this._getNodeLinePath(data.from - 1)[0][1];
-    var toNodeColumnXOffset = this._getNodeLinePath(data.to - 1)[0][1];
+        this.callbackFunction = args.callback;
 
-    // Draw the message line
-    var nextMessageLineYOffset = this._lineStartY + (this._mLineGap * (this.messages.length + 1));
-    var line = this.canvas.path("M " + fromNodeColumnXOffset + ", " + nextMessageLineYOffset + " H " + toNodeColumnXOffset);
-
-    // Prepare to create an arrow to go at the end of the message line
-    var arrow;
-    var textAnchor = "start";
-    var indent = 8;
-    var moveToCoords = toNodeColumnXOffset + " " + nextMessageLineYOffset;
-    var size = 6;
-    var x = toNodeColumnXOffset + size;
-    var l1 = x + " " + (nextMessageLineYOffset - size);
-    var l2 = x + " " + (nextMessageLineYOffset + size);
-    var l3 = toNodeColumnXOffset + " " + nextMessageLineYOffset;
-	
-    // Point left or right
-    if (data.from < data.to)
-    {
-        x = toNodeColumnXOffset - size;
-        l1 = x + " " + (nextMessageLineYOffset - size);
-        l2 = x + " " + (nextMessageLineYOffset + size);
-    }
-    else
-    {
-        textAnchor = "end";
-        indent = -8;
-    }
-
-    // Draw arrow at the end of the message line using the path coordinates resolved above
-    arrow = this.canvas.path("M " + moveToCoords + " L" + l1 + " L" + l2 + " L" + l3).attr("fill","black");
-
-    // Display primary text, if it was supplied by the user
-    var primaryText = null;
-    if ((typeof data.primaryText != "undefined") && (data.primaryText !== null))
-    {
-        primaryText = this.canvas.text(fromNodeColumnXOffset + indent, nextMessageLineYOffset-12, data.primaryText).attr({'text-anchor':textAnchor, fill:'#000', "font-size":13, "font-style":"bold"});
-    }
-
-    // Display secondary text, if it was supplied by the user
-    var secondaryText = null;
-    if ((typeof data.secondaryText != "undefined") && (data.secondaryText !== null))
-    {
-        secondaryText = this.canvas.text(fromNodeColumnXOffset + indent, nextMessageLineYOffset+10, data.secondaryText).attr({'text-anchor':textAnchor, fill:'#666', "font-size":12});
-    }
-
-    // Create, save and return a new message object 
-    var m = new Message(line, arrow, primaryText, secondaryText, this.messages, data.callback, data.callbackData, this);
-    this.messages.push(m);
-
-    return m;
-};
-
-MessageFlow.prototype._getNodeLinePath=function(index)
-{
-    return this.nodes[index].linePath.attr("path");
-};
-
-/*
-    Message class:
-        state:     message elements that are referenced by mouse events
-        behaviour: bind mouse events
-*/
-function Message(_line, _arrow, _primaryText, _secondaryText, messages, _callback, _callbackData, messageFlow)
-{
-    // class variables
-    this.line=_line;
-    this.arrow=_arrow;
-    this.primaryText=_primaryText;
-    this.secondaryText=_secondaryText;
-    this.clicked=false;
-    this.callback=_callback;
-    this.callbackData=_callbackData;
-
-    this.primaryText.data("message", messageFlow);
-
-    this._bindMouseEvents(this, messages);
-}
-
-Message.prototype._bindMouseEvents=function(messageObj, messages)
-{
-    // If there is message text, then bind the mouse events
-    if (this.primaryText !== null)
+    	return this;
+    };
+    
+    MessageLine.prototype.bindMouseEvents = function(messageLineController)
     {
         this.primaryText.attr({cursor:"pointer"});
+        this.secondaryText.attr({cursor:"pointer"});
+        this.linePath.attr({cursor:"pointer"});
+        this.arrowPath.attr({cursor:"pointer"});
+
+        var that = this;
 
         this.primaryText.click(function(evt) {
-            var m = messages;
-
-            for (var k=0; k<m.length; k++) // avoiding use of a for-in loop as its slower that a regular for loop
-            {
-                m[k].clicked = false;
-                m[k].primaryText.attr({fill:"black"});
-                m[k].secondaryText.attr({fill:"#666"});
-                m[k].line.attr({stroke:"black"});
-                m[k].arrow.attr({stroke:"black"});
+            if (messageLineController.activeMessageLine) {
+                // un-highlight the last clicked message line
+                messageLineController.activeMessageLine.setDefaultStyle();    
             }
+            
+            // hightlight the clicked message line
+            that.setActiveStyle();
 
-            this.attr({fill:"blue"});
-            messageObj.secondaryText.attr({fill:"blue"});
-            messageObj.line.attr({stroke:"blue"});
-            messageObj.arrow.attr({stroke:"blue"});
+            messageLineController.activeMessageLine = that;
 
-            if (typeof messageObj.callback !== "undefined")
-            {
-                var f = messageObj.callback;
-                if ((typeof messageObj.callbackData === "undefined") || (messageObj.callbackData === null)) {
-                    f();
-                } else {
-                    f(messageObj.callbackData);
-                }
-            }
-
-            messageObj.clicked = true;
-        });
-
-        messageObj.primaryText.mouseover(function() {
-            this.attr({fill:"blue"});
-        });
-
-        messageObj.primaryText.mouseout(function() {
-            if (!messageObj.clicked)
-            {
-                this.attr({fill:"black"});
+            // execute callback function
+            if (that.callbackFunction) {
+                that.callbackFunction();
             }
         });
-    }
-};
 
-function _isValid(from, to, nodeCount)
-{
-    if ((from < 0) || (from > nodeCount) || (to < 0) || (to > nodeCount) || (from == to))
-    {
-        return false;
-    }
-    return true;
-}
+        this.primaryText.hover(function() {
+            that.setHoverStyle();
+        }, function() {
+            if (that !== messageLineController.activeMessageLine)
+            {
+                that.setDefaultStyle();
+            }
+        });
 
-/*
-    Node class:
-        state:     properties of a node's line
-        behaviour: node construction functions
-*/
-function Node(text, canvas, nodeTitleBoxGap, nodeCount, nodeIndex)
-{
-    this.lineX = -1;
-    this.linePath = null;
+        this.secondaryText.hover(function() {
+            that.setHoverStyle();
+        }, function() {
+            if (that !== messageLineController.activeMessageLine)
+            {
+                that.setDefaultStyle();
+            }
+        });
+    };
+
+    MessageLine.prototype.setStyle = function(styleObj) {
+        var linePathAttr = { 'stroke' : styleObj.lineColor };
+        if (styleObj.lineStyle === "stroke") {
+            linePathAttr['stroke-width'] = 2;
+        } else if (styleObj.lineStyle === "stroke-dasharray") {
+            linePathAttr[styleObj.lineStyle] = "--";
+        }
+        
+        this.linePath.attr(linePathAttr);
+
+        this.arrowPath.attr({ 'fill' : styleObj.lineColor, 'stroke' : styleObj.lineColor });
+        this.primaryText.attr({ 'fill' : styleObj.primaryTextColor });
+        
+        if (this.secondaryText)
+        {
+            this.secondaryText.attr({ 'fill' : styleObj.secondaryTextColor });
+        }
+    };
+
+    MessageLine.prototype.setDefaultStyle = function() {
+        this.setStyle(LINE_STYLES[this.lineType].defaultLine);
+    };
+
+    MessageLine.prototype.setHoverStyle = function() {
+        this.setStyle(LINE_STYLES[this.lineType].hover);
+    };
+
+    MessageLine.prototype.setActiveStyle = function() {
+        this.setStyle(LINE_STYLES[this.lineType].active);
+    };
     
-    this._resolveLineOffsetX(nodeCount, nodeIndex, nodeTitleBoxGap);
-    this._createNodeTitleBox(text, canvas);
-    this._createNodeLine(canvas);
-}
+    // Attaches the single namespace to the global object.
+    // This constructor is used as a function expression by the user (ie, using the 'new' keyword)
+	// return: the MessageFlow object
+	glob.MessageFlow = function(args) {
+		this.id = messageFlowControllers.push(new MessageFlowController().constructDiagram(args)) - 1;
+    };
 
-// FIX: DUPLICATED STATIC VARIABLES IN MESSAGEFLOW OBJECT
-Node.prototype._nodeRectHeight = 48;
-Node.prototype._nodeRectWidth = 80;
-Node.prototype._nodeRectWidthHalved = 40;
-Node.prototype._margin = 20;
-Node.prototype._lineStartY = 68;
+    // return: the id of the message line
+    MessageFlow.prototype.addMessageLine = function(args) {
+    	var messageFlowController = messageFlowControllers[this.id];
+    	var messageLine = new MessageLine();
+    	var fromOffsetX, toOffsetX, yOffset;
+    		
+    	messageLine.checkArgumentsAreValid(args);
+    	messageFlowController.stretchCanvasToFitNewMessageLine();
+    	
+    	fromOffsetX = messageFlowController.nodes[args.from - 1].lineOffsetX;
+    	toOffsetX = messageFlowController.nodes[args.to - 1].lineOffsetX;
+    	yOffset = parseInt(messageFlowController.canvas.height, 10) - MARGIN - messageFlowController.messageSpaceRemaining;
+    	messageLine.construct(messageFlowController.canvas, args, fromOffsetX, toOffsetX, yOffset);
+    	messageLine.bindMouseEvents(messageFlowController);
 
-Node.prototype._resolveLineOffsetX=function(nodeCount, nodeIndex, nodeTitleBoxGap)
-{
-    if (nodeCount == 1)
-    {
-        this.lineX = this.canvas.width / 2;
-    }
-    else if (nodeCount == 2)
-    {
-        this.lineX = this.canvas.width / 3;
-    }
-    else if (nodeCount > 2)
-    {
-        this.lineX = (nodeTitleBoxGap * nodeIndex) + (this._nodeRectWidth * (nodeIndex - 1)) + this._nodeRectWidthHalved;
-    }
-};
+        if (args.lineStyle) {
+            messageFlowController.activeMessageLine = messageLine;
+        }
 
-Node.prototype._createNodeTitleBox=function(text, canvas)
-{
-    var boxCoordX = this.lineX - this._nodeRectWidthHalved;
-    canvas.rect(boxCoordX, this._margin, this._nodeRectWidth, this._nodeRectHeight);
+        // create new MessageLine and add it to the list of current lines
+		return messageFlowController.messageLines.push(messageLine) - 1;
+    };
 
-    var textPosY = (this._nodeRectHeight/2) + this._margin;
-    canvas.text(this.lineX, textPosY, text).attr({'text-anchor':'middle', fill:'#000', "font-size": 14});
-};
-
-Node.prototype._createNodeLine=function(canvas)
-{
-    this.linePath = canvas.path("M " + this.lineX + " " + this._lineStartY + " V " + (parseInt(canvas.height, 10) - this._margin)).attr({"stroke": "#aaa"});
-};
+}(window));
 

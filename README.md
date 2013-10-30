@@ -44,8 +44,8 @@ mflow.addMessageLine({ from          : 1,
                        to            : 2,
                        primaryText   : "Message one",
                        secondaryText : "16:12:00",
-                       callback      : someFunction,
-                       callbackData  : {someData:"blah", someMoreData:"ja"} });
+                       lineType      : "expected",
+                       callback      : someFunction });
 ```
 
 'addMessageLine(...)' parameters:
@@ -54,8 +54,8 @@ mflow.addMessageLine({ from          : 1,
 * __to__            - The node (column) where the message line finishes.
 * __primaryText__   - The text that is displayed above the message line (for example, the name of the message).
 * __secondaryText__ - The text that is displayed below the message line (for example, a message sent / arrival timestamp).
+* __lineType__      - (Optional) The uniquely styled type of message line to use. Default is "unexpected".
 * __callback__     - The function that is called when a user clicks on the primary message text. This function might do something like display extra details about a message.
-* __callbackData__  - The data that is passed into the callback function when it is called. This data parameter is an object.
 
 Feedback
 ----------------------------------------
