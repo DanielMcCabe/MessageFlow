@@ -106,7 +106,7 @@
     }
 	
 	MessageFlowController.prototype.checkArgumentsAreValid = function(args) {
-    	var i = 0;
+    	var i;
 		
 		if (!args) {
     		throw {
@@ -136,7 +136,7 @@
     		};
     	}
     	
-    	for (i; i < args.nodeNames.length; i++) {
+    	for (i=0; i < args.nodeNames.length; i++) {
     		if (typeof args.nodeNames[i] !== 'string') {
     			throw {
         			name : "Invalid argument exception",
@@ -269,6 +269,7 @@
     	this.arrowPath;
     	this.primaryText;
     	this.secondaryText;
+        this.selectableArea;
         this.callbackFunction;
         this.lineType = "expected";
     }
@@ -359,7 +360,9 @@
             	'text-anchor': textAnchor,
             	'font-size': 12});
         }
-    	
+
+        this.selectableArea = canvas.rect(Math.min(fromOffsetX, toOffsetX), yOffset - 20, Math.abs(toOffsetX - fromOffsetX), 40).attr({'stroke': 'black', 'stroke-opacity': 0, 'fill': 'black', 'fill-opacity': 0});
+
         this.setDefaultStyle();
 
         this.callbackFunction = args.callback;
@@ -369,14 +372,11 @@
     
     MessageLine.prototype.bindMouseEvents = function(messageLineController)
     {
-        this.primaryText.attr({cursor:"pointer"});
-        this.secondaryText.attr({cursor:"pointer"});
-        this.linePath.attr({cursor:"pointer"});
-        this.arrowPath.attr({cursor:"pointer"});
-
         var that = this;
 
-        this.primaryText.click(function(evt) {
+        this.selectableArea.attr({cursor:"pointer"});
+
+        this.selectableArea.click(function(evt) {
             if (messageLineController.activeMessageLine) {
                 // un-highlight the last clicked message line
                 messageLineController.activeMessageLine.setDefaultStyle();    
@@ -393,17 +393,11 @@
             }
         });
 
-        this.primaryText.hover(function() {
-            that.setHoverStyle();
-        }, function() {
+        this.selectableArea.hover(function() {
             if (that !== messageLineController.activeMessageLine)
             {
-                that.setDefaultStyle();
+                that.setHoverStyle();
             }
-        });
-
-        this.secondaryText.hover(function() {
-            that.setHoverStyle();
         }, function() {
             if (that !== messageLineController.activeMessageLine)
             {

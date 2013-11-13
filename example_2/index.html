@@ -8,40 +8,68 @@
     <script type="text/javascript" src="../messageflow-min.js" > </script>
     <script type="text/javascript">
 
-        window.onload=function() {
+	    window.onload=function() {
 
-            function displayMessageDetails(data)
-            {
-                return function() {
-                    var value = "<h2>" + data.someContent + "</h2>";
+        var someIncomingJSONData = {someData : [[{ from : 1,
+                                                   to : 2,
+                                                   primaryText : "Message one",
+                                                   secondaryText : "Arrival:  16:12:00",
+                                                   lineType : "received" },
+                                                 { title: "Message one",
+                                                   details: "Details of message one could go here." }],
 
-                    var detailsContainer = document.getElementById("details-container");
-                    detailsContainer.innerHTML = value;
-                };
+                                                [{ from : 2,
+                                                   to : 4,
+                                                   primaryText : "Message two",
+                                                   secondaryText : "Arrival:  16:44:00",
+                                                   lineType : "received" },
+                                                 { title: "Message two",
+                                                   details: "Details of message two could go here." }],
+
+                                                [{ from : 4,
+                                                   to : 3,
+                                                   primaryText : "Message three",
+                                                   secondaryText : "Arrival:  17:14:00",
+                                                   lineType : "unexpected" },
+                                                 { title: "Message three",
+                                                   details: "Details of message three could go here." }],
+
+                                                [{ from : 3,
+                                                   to : 1,
+                                                   primaryText : "Message four",
+                                                   secondaryText : "Arrival:  18:26:04" },
+                                                 { title: "Message four",
+                                                   details: "Details of message four could go here." }]]};
+
+	    	var mFlow = new MessageFlow({ container : "message-flow-container",
+                                      nodeNames : ["Node 1", "Node 2", "Node 3", "Node 4"] });
+
+        var dataArray = someIncomingJSONData.someData;
+        var i = 0;
+        var args;
+
+        // Some callback function that you define
+        function getCallbackFunction(callbackArgs) {
+            return function() {
+                var detailMarkup,detailsContainer;
+
+                detailMarkup = "<h2>" + callbackArgs.title + "</h2>";
+                detailMarkup += "<p>" + callbackArgs.details + "</p>";
+
+                detailsContainer = document.getElementById("details-container");
+                detailsContainer.innerHTML = detailMarkup;
             }
+        }
 
-            var mFlow = new MessageFlow({ container : "message-flow-container",
-                                          nodeNames : ["Node 1", "Node 2", "Node 3", "Node 4"] });
+        for (i; i<dataArray.length; i++) {
+            args = dataArray[i][0];
 
-            // Add button onclick handler
-            var s = document.getElementById("add").onclick = function() {
-                // get user input
-                var msgContent = document.getElementById("data").value;
-                var fromContent = document.getElementById("from").value;
-                var toContent = document.getElementById("to").value;
+            // set the 'callback' argument
+            args.callback = getCallbackFunction(dataArray[i][1]);
 
-                // create closure and associate the user input with it
-                var callbackData = {someContent: msgContent};
-                var myCallback = displayMessageDetails(callbackData);
-
-                // add a message line passing in the closure as a callback function
-                mFlow.addMessageLine({ from          : fromContent,
-                                       to            : toContent,
-                                       primaryText   : "Message",
-                                       secondaryText : "Received",
-                                       callback      : myCallback });
-            };
-
+            // utilise the MessageFlow API to add a new message line
+            mFlow.addMessageLine(args);
+        }
     	};
 
 	</script>
@@ -49,16 +77,13 @@
 <body>
 
 	<div>
-		<h2>MessageFlow example 2</h2>
+		<h2>MessageFlow example 1</h2>
 	</div>
 
 	<div>
-		<p>Click on any message to display it details.</p>
+		<p>Click on any message to display its details.</p>
 
 		<h3>Simple MessageFlow diagram</h3>
-        <h4>Add message line:</h4>
-        <p><span style="font-style:italic;">eg, from: <strong>1</strong>, to: <strong>4</strong>, data: <strong>Hi there!</strong></span><br>
-        from: <input type="text" id="from"></input> to: <input type="text" id="to"></input> data: <input type="text" id="data"></input> <button id="add">add</button></p>
 
 		<div id="message-flow-container" style="border:1px solid #000;width:600px;height:400px;position:relation;float:left;"></div>
         <div id="details-container" style="margin:20px;width:300px;position:relation;float:left;"></div>
