@@ -90,6 +90,22 @@
                                                       lineColor : "#EE7621",
                                                       primaryTextColor : "#EE7621",
                                                       secondaryTextColor : "#EE7621" }
+                                       },
+
+                        "timeout" :    { "defaultLine" : { lineStyle : "stroke-dasharray",
+                                                           lineColor : "#D2691E",
+                                                           primaryTextColor : "#D2691E",
+                                                           secondaryTextColor : "#D2691E" },
+
+                                         "hover" :  { lineStyle : "stroke-dasharray",
+                                                      lineColor : "#EE7621",
+                                                      primaryTextColor : "#EE7621",
+                                                      secondaryTextColor : "#EE7621" },
+
+                                         "active" : { lineStyle : "stroke-dasharray",
+                                                      lineColor : "#EE7621",
+                                                      primaryTextColor : "#EE7621",
+                                                      secondaryTextColor : "#EE7621" }
                                        } 
     };
 
@@ -304,7 +320,7 @@
             };
         }
 
-        if (args.lineType && (args.lineType !== "expected" && args.lineType !== "received" && args.lineType !== "unexpected")) {
+        if (args.lineType && (args.lineType !== "expected" && args.lineType !== "received" && args.lineType !== "unexpected" && args.lineType !== "timeout")) {
             throw {
                 name : "Invalid argument exception",
                 message : "Invalid argument lineStyle."

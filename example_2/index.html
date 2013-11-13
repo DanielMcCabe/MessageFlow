@@ -34,12 +34,20 @@
                                                  { title: "Message three",
                                                    details: "Details of message three could go here." }],
 
+                                                [{ from : 4,
+                                                   to : 3,
+                                                   primaryText : "Message four",
+                                                   secondaryText : "Arrival:  17:16:00",
+                                                   lineType : "timeout" },
+                                                 { title: "Message four",
+                                                   details: "Details of message four could go here." }],
+
                                                 [{ from : 3,
                                                    to : 1,
-                                                   primaryText : "Message four",
+                                                   primaryText : "Message five",
                                                    secondaryText : "Arrival:  18:26:04" },
-                                                 { title: "Message four",
-                                                   details: "Details of message four could go here." }]]};
+                                                 { title: "Message five",
+                                                   details: "Details of message five could go here." }]]};
 
 	    	var mFlow = new MessageFlow({ container : "message-flow-container",
                                       nodeNames : ["Node 1", "Node 2", "Node 3", "Node 4"] });
