@@ -10,49 +10,58 @@
 
 	    window.onload=function() {
 
-        var someIncomingJSONData = {someData : [[{ from : 1,
-                                                   to : 2,
-                                                   primaryText : "Message one",
-                                                   secondaryText : "Arrival:  16:12:00",
-                                                   lineType : "received" },
-                                                 { title: "Message one",
-                                                   details: "Details of message one could go here." }],
+        <!-- These three variables represent JSON data that would incrementally arrive on the wire -->
+        var incomingMessage_1 = { incomingMessage : { id : 0,
+                                                      arrivalTime : "12:04:11",
+                                                      details: "Details of message one could go here." } };
 
-                                                [{ from : 2,
-                                                   to : 4,
-                                                   primaryText : "Message two",
-                                                   secondaryText : "Arrival:  16:44:00",
-                                                   lineType : "received" },
-                                                 { title: "Message two",
-                                                   details: "Details of message two could go here." }],
+        var incomingMessage_2 = { incomingMessage : { id : 1,
+                                                      arrivalTime : "12:06:04",
+                                                      details: "Details of message two could go here." } };
 
-                                                [{ from : 4,
-                                                   to : 3,
-                                                   primaryText : "Message three",
-                                                   secondaryText : "Arrival:  17:14:00",
-                                                   lineType : "unexpected" },
-                                                 { title: "Message three",
-                                                   details: "Details of message three could go here." }],
+        var incomingMessage_3 = { incomingMessage : { id : 2,
+                                                      arrivalTime : "12:16:48",
+                                                      details: "Details of message three could go here." } };
 
-                                                [{ from : 4,
-                                                   to : 3,
-                                                   primaryText : "Message four",
-                                                   secondaryText : "Arrival:  17:16:00",
-                                                   lineType : "timeout" },
-                                                 { title: "Message four",
-                                                   details: "Details of message four could go here." }],
+        var someIncomingJSONData = {expectedMessages : [[{ from : 1,
+                                                           to : 2,
+                                                           primaryText : "Message one" },
+                                                         { title: "Message one",
+                                                           details: "Details of message one could go here." },
+                                                         { timeout: 6000 }],
 
-                                                [{ from : 3,
-                                                   to : 1,
-                                                   primaryText : "Message five",
-                                                   secondaryText : "Arrival:  18:26:04" },
-                                                 { title: "Message five",
-                                                   details: "Details of message five could go here." }]]};
+                                                        [{ from : 2,
+                                                           to : 4,
+                                                           primaryText : "Message two" },
+                                                         { title: "Message two",
+                                                           details: "Details of message two could go here." },
+                                                         { timeout: 14000 }],
+
+                                                        [{ from : 4,
+                                                           to : 3,
+                                                           primaryText : "Message three" },
+                                                         { title: "Message three",
+                                                           details: "Details of message three could go here." },
+                                                         { timeout: 5000 }],
+
+                                                        [{ from : 4,
+                                                           to : 3,
+                                                           primaryText : "Message four" },
+                                                         { title: "Message four",
+                                                           details: "Details of message four could go here." },
+                                                         { timeout: 6000 }],
+
+                                                        [{ from : 3,
+                                                           to : 1,
+                                                           primaryText : "Message five" },
+                                                         { title: "Message five",
+                                                           details: "Details of message five could go here." },
+                                                         { timeout: 5000 }]]};
 
 	    	var mFlow = new MessageFlow({ container : "message-flow-container",
                                       nodeNames : ["Node 1", "Node 2", "Node 3", "Node 4"] });
 
-        var dataArray = someIncomingJSONData.someData;
+        var dataArray = someIncomingJSONData.expectedMessages;
         var i = 0;
         var args;
 
@@ -78,6 +87,31 @@
             // utilise the MessageFlow API to add a new message line
             mFlow.addMessageLine(args);
         }
+
+
+        function startTimerCallback(messageId) {
+            return function() {
+                mFlow.startMessageTimer(messageId, someIncomingJSONData.expectedMessages[messageId][2].timeout);
+            }
+        }
+
+        function messageReceivedCallback(data) {
+            return function() {
+                mFlow.changeMessageState(data.incomingMessage.id, "received");
+            }
+        }
+
+        // simulating messages arriving synchronously over the wire
+        window.setTimeout(startTimerCallback(0), 400);
+        window.setTimeout(messageReceivedCallback(incomingMessage_1), 6000);
+
+        window.setTimeout(startTimerCallback(1), 6000);
+        window.setTimeout(messageReceivedCallback(incomingMessage_2), 10000);
+
+        window.setTimeout(startTimerCallback(2), 10000);
+        window.setTimeout(messageReceivedCallback(incomingMessage_3), 14000);
+
+        window.setTimeout(startTimerCallback(3), 14000);
     	};
 
 	</script>
